@@ -1,0 +1,42 @@
+#!/bin/bash
+# setup.sh - Установка зависимостей Python-приложения
+# Расположение: {{ app_dir }}/setup.sh
+
+set -e  # Прерывать выполнение при первой ошибке
+
+# Переменные
+APP_DIR="{{ app_dir }}"
+VENV_DIR="{{ venv_dir }}"
+LOG_FILE="$/home/devops/logs/setup.log"
+
+# Создаём директорию для логов
+mkdir -p "$(dirname "$LOG_FILE")"
+
+# Функция логирования
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+log "=== Начало установки зависимостей ==="
+
+# Активируем виртуальное окружение и устанавливаем зависимости
+log "Установка зависимостей из requirements.txt..."
+"$VENV_DIR/bin/pip" install -r "$APP_DIR/requirements.txt" >> "$LOG_FILE" 2>&1
+
+# Проверка: убедимся, что Flask установлен
+if "$VENV_DIR/bin/python" -c "import flask" > /dev/null 2>&1; then
+    log "✅ Flask успешно установлен."
+else
+    log "❌ Ошибка: Flask не найден после установки!"
+    exit 1
+fi
+
+# Проверка: убедимся, что psycopg2 установлен
+if "$VENV_DIR/bin/python" -c "import psycopg2" > /dev/null 2>&1; then
+    log "✅ psycopg2 успешно установлен."
+else
+    log "❌ Ошибка: psycopg2 не найден после установки!"
+    exit 1
+fi
+
+log "=== Установка завершена успешно ==="

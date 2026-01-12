@@ -1,0 +1,61 @@
+---
+- name: Install PostgreSQL and dependencies
+  apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    state: present
+  notify: Restart PostgreSQL
+
+- name: Ensure PostgreSQL is started and enabled
+  systemd:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Ensure PostgreSQL cluster exists
+  command: pg_createcluster 14 main --start
+  args:
+    creates: /etc/postgresql/14/main/postgresql.conf
+  become: yes
+
+- name: Copy pg_hba.conf template
+  template:
+    src: pg_hba.conf.j2
+    dest: /etc/postgresql/14/main/pg_hba.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart PostgreSQL
+
+- name: Copy PostgreSQL configuration template
+  template:
+    src: postgresql.conf.j2
+    dest: /etc/postgresql/14/main/postgresql.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart PostgreSQL
+
+- name: Ensure PostgreSQL is started and enabled
+  systemd:
+    name: postgresql
+    state: started
+
+- name: Create database user
+  postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    role_attr_flags: LOGIN
+    login_user: postgres
+  become: yes
+  become_user: postgres
+
+- name: Create database
+  postgresql_db:
+    name: "{{ db_name }}"
+    owner: "{{ db_user }}"
+    login_user: postgres
+  become: yes
+  become_user: postgres

@@ -1,0 +1,85 @@
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+  become: yes
+
+- name: Install Python cryptography for SSL module
+  pip:
+    name: cryptography
+    state: present
+  become: yes
+
+- name: Create SSL directory
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: yes
+
+- name: Generate private key
+  openssl_privatekey:
+    path: /etc/nginx/ssl/nginx-selfsigned.key
+    size: 2048
+    mode: '0600'
+  become: yes
+
+- name: Generate CSR
+  openssl_csr:
+    path: /etc/nginx/ssl/nginx-selfsigned.csr
+    privatekey_path: /etc/nginx/ssl/nginx-selfsigned.key
+    common_name: "{{ domain_name }}"
+    subject_alt_name:
+      - "DNS:{{ domain_name }}"
+    country_name: "BY"
+    state_or_province_name: "Minsk"
+    locality_name: "Minsk"
+    organization_name: "DevOps Team"
+    mode: '0644'
+  become: yes
+
+- name: Generate self-signed certificate
+  openssl_certificate:
+    path: /etc/nginx/ssl/nginx-selfsigned.crt
+    privatekey_path: /etc/nginx/ssl/nginx-selfsigned.key
+    csr_path: /etc/nginx/ssl/nginx-selfsigned.csr
+    provider: selfsigned
+    selfsigned_not_after: "+365d"
+    mode: '0644'
+  become: yes
+
+- name: Copy Nginx virtual host configuration
+  template:
+    src: app.devops.local.conf.j2
+    dest: /etc/nginx/sites-available/app.devops.local
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: restartNginx
+
+- name: Enable Nginx virtual host
+  file:
+    src: /etc/nginx/sites-available/app.devops.local
+    dest: /etc/nginx/sites-enabled/app.devops.local
+    state: link
+  become: yes
+  notify: restartNginx
+
+- name: Remove default site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  become: yes
+  notify: restartNginx
+
+- name: Create Nginx log directories
+  file:
+    path: /var/log/nginx/
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: yes

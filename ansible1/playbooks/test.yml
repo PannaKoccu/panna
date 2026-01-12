@@ -1,0 +1,8 @@
+---
+- name: Debug variables
+  hosts: vm1
+  tasks:
+    - debug:
+        var: db_user
+    - debug:
+        var: db_password

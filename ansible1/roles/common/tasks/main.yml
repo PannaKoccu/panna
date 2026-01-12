@@ -1,0 +1,133 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install basic packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - curl
+    - wget
+    - git
+    - python3-pip
+    - python3-dev
+    - libpq-dev
+    - vim
+    - acl
+    - python3-venv
+    - logrotate
+
+- name: Create devops user if not exists
+  user:
+    name: devops
+    shell: /bin/bash
+    create_home: yes
+    state: present
+  become: yes
+
+- name: Add devops to sudo group
+  user:
+    name: devops
+    groups: sudo
+    append: yes
+  become: yes
+
+- name: Allow devops to run sudo without password
+  lineinfile:
+    path: /etc/sudoers.d/devops-nopasswd
+    create: yes
+    owner: root
+    group: root
+    mode: '0440'
+    line: 'devops ALL=(ALL) NOPASSWD:ALL'
+    validate: 'visudo -cf %s'
+  become: yes
+
+- name: Ensure SSH directory
+  file:
+    path: /home/devops/.ssh
+    state: directory
+    owner: devops
+    group: devops
+    mode: '0700'
+
+- name: Copy SSH public key for devops (VM1)
+  copy:
+    src: /home/pannakoccu/.ssh/id_rsa_vm1.pub
+    dest: /home/devops/.ssh/authorized_keys
+    owner: devops
+    group: devops
+    mode: '0600'
+  become: yes
+  when: inventory_hostname in groups['vm1']
+
+- name: Copy SSH public key for devops (VM2)
+  copy:
+    src: /home/pannakoccu/.ssh/id_rsa_vm2.pub
+    dest: /home/devops/.ssh/authorized_keys
+    owner: devops
+    group: devops
+    mode: '0600'
+  become: yes
+  when: inventory_hostname in groups['vm2']
+
+- name: Disable password authentication in SSH
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication'
+    line: 'PasswordAuthentication no'
+    backup: yes
+  notify: restart ssh
+
+- name: Disable root login in SSH
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin no'
+    backup: yes
+  notify: restart ssh
+
+- name: Ensure PubkeyAuthentication is enabled
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PubkeyAuthentication'
+    line: 'PubkeyAuthentication yes'
+    backup: yes
+  notify: restart ssh
+
+
+- name: Set up firewall (ufw)
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+  loop:
+    - 22
+    - 80
+    - 443
+  when: inventory_hostname in groups['vm1']
+
+- name: Allow port 5000 only from VM2
+  ufw:
+    rule: allow
+    port: 5000
+    from_ip: "{{ nginx_ip }}"
+  become: yes
+  when: inventory_hostname in groups['vm1']
+
+- name: Set up firewall (ufw)
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+  loop:
+    - 22
+    - 80
+    - 443
+  when: inventory_hostname in groups['vm2']
+
+
+- name: Enable and start ufw
+  ufw:
+    state: enabled

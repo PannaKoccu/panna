@@ -1,0 +1,59 @@
+---
+- name: Create logs directory for scripts
+  file:
+    path: "{{ app_dir }}/logs"
+    state: directory
+    owner: devops
+    group: devops
+    mode: '0755'
+  become: yes
+  become_user: devops
+
+- name: Copy setup.sh script
+  template:
+    src: setup.sh.j2
+    dest: "{{ app_dir }}/setup.sh"
+    owner: devops
+    group: devops
+    mode: '0755'
+  become: yes
+  become_user: devops
+
+- name: Create backups directory
+  file:
+    path: "{{ app_dir }}/backups"
+    state: directory
+    owner: devops
+    group: devops
+    mode: '0755'
+  become: yes
+  become_user: devops
+
+- name: Copy backup.sh script
+  template:
+    src: backup.sh.j2
+    dest: "{{ app_dir }}/backup.sh"
+    owner: devops
+    group: devops
+    mode: '0755'
+  become: yes
+  become_user: devops
+
+- name: Install backup cron job
+  cron:
+    name: "Daily database backup"
+    minute: "0"
+    hour: "2"
+    job: "{{ app_dir }}/backup.sh >> /home/devops/logs/cron_backup.log 2>&1"
+    user: devops
+  become: yes
+
+- name: Create .pgpass file for passwordless pg_dump
+  template:
+    src: pgpass.j2
+    dest: "/home/devops/.pgpass"
+    owner: devops
+    group: devops
+    mode: '0600'
+  become: yes
+  become_user: devops

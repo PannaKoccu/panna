@@ -1,0 +1,68 @@
+#!/bin/bash
+# healthcheck.sh - Мониторинг веб-сервера И бэкенда
+# Расположение: /home/devops/healthcheck.sh
+
+set -e
+
+# Настройки
+LOG_FILE="/home/devops/logs/healthcheck.log"
+NGINX_URL="http://localhost"
+BACKEND_URL="http://{{ web_server_ip }}:{{ app_port }}"  # ← IP VM1
+
+# Создаём директорию для логов
+mkdir -p "$(dirname "$LOG_FILE")"
+
+# Функция логирования
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+log "=== Начало проверки состояния ==="
+
+# --- 1. Проверка Nginx (локально) ---
+log "Проверка Nginx: $NGINX_URL"
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$NGINX_URL")
+if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 301 ] || [ "$HTTP_CODE" -eq 302 ]; then
+    log "✅ Nginx доступен (HTTP $HTTP_CODE)"
+else
+    log "❌ Nginx недоступен (HTTP $HTTP_CODE)"
+    exit 1
+fi
+
+# --- 2. Проверка бэкенда (приложения на VM1) ---
+log "Проверка бэкенда: $BACKEND_URL"
+BACKEND_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL")
+if [ "$BACKEND_CODE" -eq 200 ] || [ "$BACKEND_CODE" -eq 302 ]; then
+    log "✅ Бэкенд доступен (HTTP $BACKEND_CODE)"
+else
+    log "❌ Бэкенд недоступен (HTTP $BACKEND_CODE)"
+    exit 1
+fi
+
+# --- 3. Проверка службы nginx ---
+if systemctl is-active --quiet nginx; then
+    log "✅ Служба nginx активна"
+else
+    log "❌ Служба nginx неактивна"
+    exit 1
+fi
+
+# --- 4. Мониторинг диска, CPU, памяти ---
+DISK_USAGE=$(df -h / | awk 'NR==2 {print $5}' | sed 's/%//')
+log "Дисковое пространство: $DISK_USAGE% использовано"
+if [ "$DISK_USAGE" -gt 90 ]; then
+    log "⚠️  КРИТИЧНО: диск заполнен на $DISK_USAGE%!"
+fi
+
+CPU_LOAD=$(uptime | awk -F 'load average:' '{print $2}' | awk '{print $1}' | tr -d ',')
+log "CPU load (1 мин): $CPU_LOAD"
+
+MEM_TOTAL=$(free -m | awk 'NR==2 {print $2}')
+MEM_USED=$(free -m | awk 'NR==2 {print $3}')
+MEM_USAGE=$((100 * MEM_USED / MEM_TOTAL))
+log "Память: $MEM_USAGE% ($MEM_USED/$MEM_TOTAL MB)"
+if [ "$MEM_USAGE" -gt 90 ]; then
+    log "⚠️  КРИТИЧНО: память заполнена на $MEM_USAGE%!"
+fi
+
+log "=== Проверка завершена успешно ==="

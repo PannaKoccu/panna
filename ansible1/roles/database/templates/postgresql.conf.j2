@@ -1,0 +1,16 @@
+# -----------------------------
+# Ansible-managed PostgreSQL config for Ubuntu/Debian
+# -----------------------------
+
+data_directory = '/var/lib/postgresql/14/main'
+hba_file = '/etc/postgresql/14/main/pg_hba.conf'
+ident_file = '/etc/postgresql/14/main/pg_ident.conf'
+
+listen_addresses = 'localhost'
+port = 5432
+
+# Опционально — логирование
+logging_collector = on
+log_directory = 'log'
+log_filename = 'postgresql-%Y-%m-%d.log'
+log_statement = 'none'

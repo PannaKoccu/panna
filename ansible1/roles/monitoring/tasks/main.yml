@@ -1,0 +1,65 @@
+- name: Copy healthcheck.sh script
+  template:
+    src: healthcheck.sh.j2
+    dest: "/home/devops/healthcheck.sh"
+    owner: devops
+    group: devops
+    mode: '0755'
+  when: "'vm2' in group_names"
+  become: yes
+  become_user: devops
+
+- name: Ensure cron is installed
+  apt:
+    name: cron
+    state: present
+  become: yes
+
+- name: Install healthcheck cron job
+  cron:
+    name: "Healthcheck script"
+    minute: "*/10"
+    job: "/home/devops/healthcheck.sh >> /home/devops/logs/cron_healthcheck.log 2>&1"
+    user: devops
+  when: "'vm2' in group_names"
+  become: yes
+
+- name: Deploy logrotate config for application
+  copy:
+    content: |
+      /var/log/task1/*.log {
+          daily
+          missingok
+          rotate 14
+          compress
+          delaycompress
+          notifempty
+          create 644 devops devops
+          postrotate
+              systemctl kill --signal=SIGUSR1 task1 > /dev/null 2>&1 || true
+          endscript
+      }
+    dest: /etc/logrotate.d/task1
+    owner: root
+    group: root
+    mode: '0644'
+  when: "'vm1' in group_names"
+  become: yes
+
+- name: Deploy logrotate config for scripts
+  copy:
+    content: |
+      /home/devops/logs/*.log {
+          weekly
+          missingok
+          rotate 8
+          compress
+          delaycompress
+          notifempty
+          create 644 devops devops
+      }
+    dest: /etc/logrotate.d/task1-scripts
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes

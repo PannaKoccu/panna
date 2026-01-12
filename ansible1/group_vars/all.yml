@@ -1,0 +1,17 @@
+---
+# Настройки приложения
+app_name: "task1"
+app_port: 5000
+app_dir: "/home/devops/task1/flask-auth-example"
+venv_dir: "{{ app_dir }}/venv"
+app_repo: "https://github.com/PannaKoccu/task1.git"
+
+# PostgreSQL
+db_name: "task1"
+db_user: "devops"
+
+
+nginx_ip: "192.168.0.137"
+web_server_ip: "192.168.0.136"
+domain_name: "app.devops.local"
+ansible_password: "{{ vault_ansible_password }}"

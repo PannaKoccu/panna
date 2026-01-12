@@ -1,0 +1,105 @@
+- name: Create application directory
+  file:
+    path: /home/devops/task1/flask-auth-example
+    state: directory
+    owner: devops
+    group: devops
+    mode: '0755'
+  become: yes
+  
+- name: Clone application repository
+  git:
+    repo: https://github.com/PannaKoccu/task1.git
+    dest: "{{ app_dir }}"
+    version: main
+    force: yes
+  become: yes
+  become_user: devops
+
+- name: Create virtual environment directory
+  file:
+    path: "{{ venv_dir }}"
+    state: directory
+    owner: devops
+    group: devops
+    mode: '0755'
+
+- name: Create virtual environment without pip
+  command: python3 -m venv --without-pip "{{ venv_dir }}"
+  args:
+    creates: "{{ venv_dir }}/bin/python"
+  become: yes
+  become_user: devops
+
+- name: Download get-pip.py
+  get_url:
+    url: https://bootstrap.pypa.io/get-pip.py
+    dest: /tmp/get-pip.py
+    mode: '0644'
+  become: yes
+
+- name: Install pip into virtual environment
+  command: "{{ venv_dir }}/bin/python /tmp/get-pip.py"
+  args:
+    creates: "{{ venv_dir }}/bin/pip"
+  become: yes
+  become_user: devops
+
+- name: Create .env file
+  template:
+    src: env.j2
+    dest: "{{ app_dir }}/.env"
+    owner: devops
+    group: devops
+    mode: '0600'
+  become: yes
+  become_user: devops
+
+- name: Install Python dependencies
+  pip:
+    requirements: "{{ app_dir }}/requirements.txt"
+    executable: "{{ venv_dir }}/bin/pip"
+    state: present
+  become: yes
+  become_user: devops
+
+- name: Create application log directory
+  file:
+    path: /var/log/task1
+    state: directory
+    owner: devops
+    group: devops
+    mode: '0755'
+  become: yes
+
+- name: Check if application log file exists
+  stat:
+    path: /var/log/task1/app.log
+  register: app_log_stat
+  become: yes
+
+- name: Create empty application log file if absent
+  file:
+    path: /var/log/task1/app.log
+    state: touch
+    owner: devops
+    group: devops
+    mode: '0644'
+  when: not app_log_stat.stat.exists
+  become: yes
+
+- name: Copy systemd service file
+  template:
+    src: task1.service.j2
+    dest: /etc/systemd/system/task1.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart task1
+
+- name: Enable and start task1 service
+  systemd:
+    name: task1
+    state: started
+    enabled: yes
+  become: yes
