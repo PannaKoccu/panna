@@ -59,3 +59,14 @@
     login_user: postgres
   become: yes
   become_user: postgres
+
+- name: Grant ALL privileges on user table to application user
+  postgresql_privs:
+    database: "{{ db_name }}"
+    state: present
+    privs: ALL
+    type: table
+    objs: user
+    roles: "{{ db_user }}"
+  become: yes
+  become_user: postgres

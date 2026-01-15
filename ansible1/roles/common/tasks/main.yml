@@ -19,60 +19,7 @@
     - acl
     - python3-venv
     - logrotate
-
-- name: Create devops user if not exists
-  user:
-    name: devops
-    shell: /bin/bash
-    create_home: yes
-    state: present
-  become: yes
-
-- name: Add devops to sudo group
-  user:
-    name: devops
-    groups: sudo
-    append: yes
-  become: yes
-
-- name: Allow devops to run sudo without password
-  lineinfile:
-    path: /etc/sudoers.d/devops-nopasswd
-    create: yes
-    owner: root
-    group: root
-    mode: '0440'
-    line: 'devops ALL=(ALL) NOPASSWD:ALL'
-    validate: 'visudo -cf %s'
-  become: yes
-
-- name: Ensure SSH directory
-  file:
-    path: /home/devops/.ssh
-    state: directory
-    owner: devops
-    group: devops
-    mode: '0700'
-
-- name: Copy SSH public key for devops (VM1)
-  copy:
-    src: /home/pannakoccu/.ssh/id_rsa_vm1.pub
-    dest: /home/devops/.ssh/authorized_keys
-    owner: devops
-    group: devops
-    mode: '0600'
-  become: yes
-  when: inventory_hostname in groups['vm1']
-
-- name: Copy SSH public key for devops (VM2)
-  copy:
-    src: /home/pannakoccu/.ssh/id_rsa_vm2.pub
-    dest: /home/devops/.ssh/authorized_keys
-    owner: devops
-    group: devops
-    mode: '0600'
-  become: yes
-  when: inventory_hostname in groups['vm2']
+    - postgresql-client
 
 - name: Disable password authentication in SSH
   lineinfile:
@@ -113,6 +60,14 @@
   ufw:
     rule: allow
     port: 5000
+    from_ip: "{{ nginx_ip }}"
+  become: yes
+  when: inventory_hostname in groups['vm1']
+
+- name: Allow port 5432 only from VM2
+  ufw:
+    rule: allow
+    port: 5432
     from_ip: "{{ nginx_ip }}"
   become: yes
   when: inventory_hostname in groups['vm1']

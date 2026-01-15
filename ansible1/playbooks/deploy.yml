@@ -1,0 +1,6 @@
+---
+- name: Apply common role to all servers
+  hosts: vm1
+  become: yes
+  roles:
+    - update

@@ -6,8 +6,8 @@ set -e
 
 # Настройки
 APP_DIR="{{ app_dir }}"
-BACKUP_DIR="$APP_DIR/backups"
-LOG_FILE="$home/devops/logs/backup.log"
+BACKUP_DIR="/var/log/task1/backups"
+LOG_FILE="/var/log/task1/backup.log"
 DB_NAME="{{ db_name }}"
 DB_USER="{{ db_user }}"
 DB_HOST="localhost"
@@ -29,7 +29,8 @@ DUMP_FILE="$BACKUP_DIR/backup_$TIMESTAMP.sql"
 
 # --- 1. Создание дампа БД ---
 log "Создание дампа базы данных '$DB_NAME'..."
-pg_dump -U "$DB_USER" -h "$DB_HOST" "$DB_NAME" > "$DUMP_FILE"
+pg_dump -U "$DB_USER" -h "$DB_HOST" --data-only --inserts "$DB_NAME" > "$DUMP_FILE"
+
 
 if [ $? -eq 0 ]; then
     log "✅ Дамп создан: $DUMP_FILE"

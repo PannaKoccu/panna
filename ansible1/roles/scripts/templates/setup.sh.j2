@@ -7,7 +7,7 @@ set -e  # Прерывать выполнение при первой ошибк
 # Переменные
 APP_DIR="{{ app_dir }}"
 VENV_DIR="{{ venv_dir }}"
-LOG_FILE="$/home/devops/logs/setup.log"
+LOG_FILE="/var/log/task1/setup.log"
 
 # Создаём директорию для логов
 mkdir -p "$(dirname "$LOG_FILE")"

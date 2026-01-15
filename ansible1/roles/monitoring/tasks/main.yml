@@ -19,7 +19,7 @@
   cron:
     name: "Healthcheck script"
     minute: "*/10"
-    job: "/home/devops/healthcheck.sh >> /home/devops/logs/cron_healthcheck.log 2>&1"
+    job: "/home/devops/healthcheck.sh >/dev/null 2>&1"
     user: devops
   when: "'vm2' in group_names"
   become: yes
@@ -49,10 +49,10 @@
 - name: Deploy logrotate config for scripts
   copy:
     content: |
-      /home/devops/logs/*.log {
+      /var/logs/*.log {
           weekly
           missingok
-          rotate 8
+          rotate 14
           compress
           delaycompress
           notifempty
@@ -62,4 +62,32 @@
     owner: root
     group: root
     mode: '0644'
+  become: yes
+
+- name: Create .pgpass for database healthcheck
+  template:
+    src: pgpass.j2
+    dest: /home/devops/.pgpass
+    owner: devops
+    group: devops
+    mode: '0600'
+  become: yes
+
+- name: Copy test-deployment script to VM2
+  template:
+    src: test-deployment.sh.j2
+    dest: /home/devops/test-deployment.sh
+    owner: devops
+    group: devops
+    mode: '0755'
+  when: "'vm1' in group_names"
+  become: yes
+
+- name: Create log directory
+  file:
+    path: "/var/task1"
+    state: directory
+    owner: devops
+    group: devops
+    mode: '0755'
   become: yes

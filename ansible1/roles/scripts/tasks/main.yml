@@ -1,7 +1,7 @@
 ---
 - name: Create logs directory for scripts
   file:
-    path: "{{ app_dir }}/logs"
+    path: "var/log"
     state: directory
     owner: devops
     group: devops
@@ -21,13 +21,21 @@
 
 - name: Create backups directory
   file:
-    path: "{{ app_dir }}/backups"
+    path: "/var/task1/backups"
     state: directory
     owner: devops
     group: devops
     mode: '0755'
   become: yes
-  become_user: devops
+
+- name: Create log directory
+  file:
+    path: "/var/task1"
+    state: directory
+    owner: devops
+    group: devops
+    mode: '0755'
+  become: yes
 
 - name: Copy backup.sh script
   template:
@@ -44,16 +52,6 @@
     name: "Daily database backup"
     minute: "0"
     hour: "2"
-    job: "{{ app_dir }}/backup.sh >> /home/devops/logs/cron_backup.log 2>&1"
+    job: "{{ app_dir }}/backup.sh >> /var/backups/cron_backup.log 2>&1"
     user: devops
   become: yes
-
-- name: Create .pgpass file for passwordless pg_dump
-  template:
-    src: pgpass.j2
-    dest: "/home/devops/.pgpass"
-    owner: devops
-    group: devops
-    mode: '0600'
-  become: yes
-  become_user: devops

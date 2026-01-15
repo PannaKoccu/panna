@@ -1,0 +1,16 @@
+- name: Clone application repository
+  git:
+    repo: https://github.com/PannaKoccu/task1.git
+    dest: "{{ app_dir }}"
+    version: main
+    force: yes
+  become: yes
+  become_user: devops
+
+- name: Install Python dependencies
+  pip:
+    requirements: "{{ app_dir }}/requirements.txt"
+    executable: "{{ venv_dir }}/bin/pip"
+    state: present
+  become: yes
+  become_user: devops

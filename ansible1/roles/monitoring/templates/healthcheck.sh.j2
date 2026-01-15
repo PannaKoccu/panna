@@ -1,68 +1,83 @@
 #!/bin/bash
-# healthcheck.sh - Мониторинг веб-сервера И бэкенда
-# Расположение: /home/devops/healthcheck.sh
+# healthcheck.sh - Мониторинг Nginx и удалённого бэкенда
+# Запускается на веб-сервере
 
 set -e
 
-# Настройки
-LOG_FILE="/home/devops/logs/healthcheck.log"
-NGINX_URL="http://localhost"
-BACKEND_URL="http://{{ web_server_ip }}:{{ app_port }}"  # ← IP VM1
+LOG_FILE="/var/log/task1/healthcheck.log"
+NGINX_URL="https://{{ nginx_ip }}"
+BACKEND_URL="http://{{ app_server_ip }}:{{ app_port }}"
 
-# Создаём директорию для логов
+
 mkdir -p "$(dirname "$LOG_FILE")"
 
-# Функция логирования
 log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
+http_code() {
+    curl -k -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 15 "$1"
+}
+
+check_nginx() {
+    if code=$(http_code "$NGINX_URL"); then
+        [[ "$code" =~ ^[23][0-9][0-9]$ ]] && log "Nginx доступен (HTTP $code)" || { log "Nginx вернул ошибку (HTTP $code)"; exit 1; }
+    else
+        log "Nginx недоступен (ошибка соединения)"
+        exit 1
+    fi
+}
+
+check_backend() {
+    if code=$(http_code "$BACKEND_URL"); then
+        if [[ "$code" =~ ^[12345][0-9][0-9]$ ]]; then
+            log "Бэкенд доступен (HTTP $code)"
+            [[ ! "$code" =~ ^2 ]] && log "Бэкенд отвечает, но статус не 2xx: $code"
+        else
+            log "Некорректный HTTP-код от бэкенда: '$code'"
+            exit 1
+        fi
+    else
+        log "Бэкенд недоступен (ошибка соединения)"
+        exit 1
+    fi
+}
+
+check_database() {
+    log "Проверка подключения к базе данных"
+    if sudo -u devops psql \
+        "host={{ app_server_ip }} port=5432 dbname={{ db_name }} user={{ db_user }}" \
+        -c "SELECT 1;" > /dev/null 2>&1; then
+        log "✅ База данных доступна"
+    else
+        log "❌ Не удалось подключиться к базе данных"
+        exit 1
+    fi
+}
+
 log "=== Начало проверки состояния ==="
 
-# --- 1. Проверка Nginx (локально) ---
-log "Проверка Nginx: $NGINX_URL"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$NGINX_URL")
-if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 301 ] || [ "$HTTP_CODE" -eq 302 ]; then
-    log "✅ Nginx доступен (HTTP $HTTP_CODE)"
-else
-    log "❌ Nginx недоступен (HTTP $HTTP_CODE)"
-    exit 1
-fi
+check_nginx
+check_backend
+check_database
 
-# --- 2. Проверка бэкенда (приложения на VM1) ---
-log "Проверка бэкенда: $BACKEND_URL"
-BACKEND_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL")
-if [ "$BACKEND_CODE" -eq 200 ] || [ "$BACKEND_CODE" -eq 302 ]; then
-    log "✅ Бэкенд доступен (HTTP $BACKEND_CODE)"
-else
-    log "❌ Бэкенд недоступен (HTTP $BACKEND_CODE)"
-    exit 1
-fi
 
-# --- 3. Проверка службы nginx ---
-if systemctl is-active --quiet nginx; then
-    log "✅ Служба nginx активна"
-else
-    log "❌ Служба nginx неактивна"
-    exit 1
-fi
+# Мониторинг ресурсов
+disk=$(df -h / | awk 'NR==2 {print $5}' | tr -d '%')
+log "Дисковое пространство: $disk% использовано"
+(( disk > 90 )) && log "КРИТИЧНО: диск заполнен на $disk%!"
 
-# --- 4. Мониторинг диска, CPU, памяти ---
-DISK_USAGE=$(df -h / | awk 'NR==2 {print $5}' | sed 's/%//')
-log "Дисковое пространство: $DISK_USAGE% использовано"
-if [ "$DISK_USAGE" -gt 90 ]; then
-    log "⚠️  КРИТИЧНО: диск заполнен на $DISK_USAGE%!"
-fi
+cpu=$(uptime | awk -F 'load average:' '{print $2}' | awk '{print $1}' | tr -d ',')
+log "CPU load (1 мин): $cpu"
+cpu=$(uptime | awk -F 'load average:' '{print $2}' | awk '{print $2}' | tr -d ',')
+log "CPU load (5 мин): $cpu"
+cpu=$(uptime | awk -F 'load average:' '{print $2}' | awk '{print $3}' | tr -d ',')
+log "CPU load (15 мин): $cpu"
 
-CPU_LOAD=$(uptime | awk -F 'load average:' '{print $2}' | awk '{print $1}' | tr -d ',')
-log "CPU load (1 мин): $CPU_LOAD"
-
-MEM_TOTAL=$(free -m | awk 'NR==2 {print $2}')
-MEM_USED=$(free -m | awk 'NR==2 {print $3}')
-MEM_USAGE=$((100 * MEM_USED / MEM_TOTAL))
-log "Память: $MEM_USAGE% ($MEM_USED/$MEM_TOTAL MB)"
-if [ "$MEM_USAGE" -gt 90 ]; then
-    log "⚠️  КРИТИЧНО: память заполнена на $MEM_USAGE%!"
-fi
+mem_total=$(free -m | awk 'NR==2 {print $2}')
+mem_used=$(free -m | awk 'NR==2 {print $3}')
+mem_usage=$((100 * mem_used / mem_total))
+log "Память: $mem_usage% ($mem_used/$mem_total MB)"
+(( mem_usage > 90 )) && log "КРИТИЧНО: память заполнена на $mem_usage%!"
 
 log "=== Проверка завершена успешно ==="

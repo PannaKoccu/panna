@@ -1,12 +1,10 @@
 ---
-# === Общая настройка для ВСЕХ хостов ===
 - name: Apply common role to all servers
   hosts: all
   become: yes
   roles:
     - common
 
-# === База данных — только на VM1 ===
 - name: Deploy PostgreSQL on VM1
   hosts: vm1
   become: yes
