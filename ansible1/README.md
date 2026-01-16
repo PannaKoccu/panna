@@ -197,7 +197,7 @@
 - pgpass.j2
 - test-deployment.sh.j2
 
-**Роль**: `monitoring`
+**Роль**: `update`
 -
 `Назначение`:
 Обновление приложения.
