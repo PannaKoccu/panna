@@ -38,11 +38,6 @@
     mode: '0644'
   notify: Restart PostgreSQL
 
-- name: Ensure PostgreSQL is started and enabled
-  systemd:
-    name: postgresql
-    state: started
-
 - name: Create database user
   postgresql_user:
     name: "{{ db_user }}"
@@ -57,16 +52,5 @@
     name: "{{ db_name }}"
     owner: "{{ db_user }}"
     login_user: postgres
-  become: yes
-  become_user: postgres
-
-- name: Grant ALL privileges on user table to application user
-  postgresql_privs:
-    database: "{{ db_name }}"
-    state: present
-    privs: ALL
-    type: table
-    objs: user
-    roles: "{{ db_user }}"
   become: yes
   become_user: postgres

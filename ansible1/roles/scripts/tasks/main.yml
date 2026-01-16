@@ -28,15 +28,6 @@
     mode: '0755'
   become: yes
 
-- name: Create log directory
-  file:
-    path: "/var/task1"
-    state: directory
-    owner: devops
-    group: devops
-    mode: '0755'
-  become: yes
-
 - name: Copy backup.sh script
   template:
     src: backup.sh.j2

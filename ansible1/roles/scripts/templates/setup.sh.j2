@@ -25,17 +25,17 @@ log "Установка зависимостей из requirements.txt..."
 
 # Проверка: убедимся, что Flask установлен
 if "$VENV_DIR/bin/python" -c "import flask" > /dev/null 2>&1; then
-    log "✅ Flask успешно установлен."
+    log "Flask успешно установлен."
 else
-    log "❌ Ошибка: Flask не найден после установки!"
+    log "Ошибка: Flask не найден."
     exit 1
 fi
 
 # Проверка: убедимся, что psycopg2 установлен
 if "$VENV_DIR/bin/python" -c "import psycopg2" > /dev/null 2>&1; then
-    log "✅ psycopg2 успешно установлен."
+    log "psycopg2 успешно установлен."
 else
-    log "❌ Ошибка: psycopg2 не найден после установки!"
+    log "Ошибка: psycopg2 не найден."
     exit 1
 fi
 

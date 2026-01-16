@@ -48,9 +48,9 @@ check_database() {
     if sudo -u devops psql \
         "host={{ app_server_ip }} port=5432 dbname={{ db_name }} user={{ db_user }}" \
         -c "SELECT 1;" > /dev/null 2>&1; then
-        log "✅ База данных доступна"
+        log "База данных доступна"
     else
-        log "❌ Не удалось подключиться к базе данных"
+        log "Не удалось подключиться к базе данных"
         exit 1
     fi
 }

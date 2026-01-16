@@ -73,7 +73,7 @@
     mode: '0600'
   become: yes
 
-- name: Copy test-deployment script to VM2
+- name: Copy test-deployment script to VM1
   template:
     src: test-deployment.sh.j2
     dest: /home/devops/test-deployment.sh
@@ -81,13 +81,4 @@
     group: devops
     mode: '0755'
   when: "'vm1' in group_names"
-  become: yes
-
-- name: Create log directory
-  file:
-    path: "/var/task1"
-    state: directory
-    owner: devops
-    group: devops
-    mode: '0755'
   become: yes
