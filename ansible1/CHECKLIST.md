@@ -13,13 +13,14 @@
 - Логи приложения: `tail -n 50 /var/log/task1/app.log`.
 **Проверка PostgreSQL.**
 - Статус службы: `sudo systemctl status postgresql`.
-- Подключение от приложения: `psql -h localhost -U task1_user -d task1 -c "SELECT 1;"`.
+- Проверка логов БД:  `sudo cat /var/log/postgresql/postgresql-14-main.log`.
 - Проверка pg_hba.conf: `sudo cat /etc/postgresql/*/main/pg_hba.conf`.
 **Проверка логов и cron** 
 - Nginx:
-  - `/var/log/nginx/app.devops.local.access.log`.
-  - `/var/log/nginx/app.devops.local.error.log`.
-- Приложение: `/var/log/task1/app.log`.
-- Backup: `/var/log/task1/backup.log`.
-- scripts: `/var/log/task1/*.log`.
+  - `sudo cat /var/log/nginx/app.devops.local.access.log`.
+  - `sudo cat /var/log/nginx/app.devops.local.error.log`.
+- Приложение: `sudo cat /var/log/task1/app.log`.
+- Backup: `sudo cat /var/log/task1/backup.log`.
+- scripts: `sudo cat /var/log/task1/*.log`.
+- БД:  `sudo cat /var/log/postgresql/postgresql-14-main.log`.
 - Проверка cron-задач: `sudo crontab -u devops -l`.

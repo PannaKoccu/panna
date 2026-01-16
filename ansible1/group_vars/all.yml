@@ -11,6 +11,6 @@ db_name: "task1"
 db_user: "devops"
 
 
-nginx_ip: "192.168.1.81"
-app_server_ip: "192.168.1.184"
+nginx_ip: "192.168.1.170"
+app_server_ip: "192.168.1.169"
 domain_name: "app.devops.local"
