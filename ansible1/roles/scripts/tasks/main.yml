@@ -1,7 +1,7 @@
 ---
 - name: Create logs directory for scripts
   file:
-    path: "var/log"
+    path: "var/log" # /var/logs # static value
     state: directory
     owner: devops
     group: devops
@@ -9,7 +9,7 @@
   become: yes
   become_user: devops
 
-- name: Copy setup.sh script
+- name: Copy setup.sh script # there is ansible.builtin.pip module for requirements.txt setup
   template:
     src: setup.sh.j2
     dest: "{{ app_dir }}/setup.sh"
@@ -21,7 +21,7 @@
 
 - name: Create backups directory
   file:
-    path: "/var/task1/backups"
+    path: "/var/task1/backups" # static value
     state: directory
     owner: devops
     group: devops

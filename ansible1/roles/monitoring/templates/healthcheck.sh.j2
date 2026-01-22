@@ -4,7 +4,7 @@
 
 set -e
 
-LOG_FILE="/var/log/task1/healthcheck.log"
+LOG_FILE="/var/log/task1/healthcheck.log" # hardcoded values in template
 NGINX_URL="https://{{ nginx_ip }}"
 BACKEND_URL="http://{{ app_server_ip }}:{{ app_port }}"
 
@@ -34,7 +34,7 @@ check_backend() {
             log "Бэкенд доступен (HTTP $code)"
             [[ ! "$code" =~ ^2 ]] && log "Бэкенд отвечает, но статус не 2xx: $code"
         else
-            log "Некорректный HTTP-код от бэкенда: '$code'"
+            log "Некорректный HTTP-код от бэкенда: '$code'" # which codes are expected if rexeg from above covers all codes?
             exit 1
         fi
     else

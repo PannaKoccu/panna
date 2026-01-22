@@ -52,8 +52,8 @@
     port: "{{ item }}"
   loop:
     - 22
-    - 80
-    - 443
+    - 80 # for what?
+    - 443 # for what?
   when: inventory_hostname in groups['vm1']
 
 - name: Allow port 5000 only from VM2
@@ -64,7 +64,7 @@
   become: yes
   when: inventory_hostname in groups['vm1']
 
-- name: Allow port 5432 only from VM2
+- name: Allow port 5432 only from VM2 # why vm2 needs postgresql access?
   ufw:
     rule: allow
     port: 5432
@@ -72,7 +72,7 @@
   become: yes
   when: inventory_hostname in groups['vm1']
 
-- name: Set up firewall (ufw)
+- name: Set up firewall (ufw) # duplicate module for separate hosts
   ufw:
     rule: allow
     port: "{{ item }}"
