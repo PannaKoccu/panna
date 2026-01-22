@@ -13,8 +13,8 @@
     dest: "{{ app_dir }}"
     version: main
     force: yes
-  become: yes
-  become_user: devops
+  become: yes # this is not necessary there
+  become_user: devops # you are already executing as devops
 
 - name: Create virtual environment directory
   file:
@@ -65,7 +65,7 @@
 
 - name: Create application log directory
   file:
-    path: /var/log/task1
+    path: /var/log/task1 # static value, not optimal
     state: directory
     owner: devops
     group: devops

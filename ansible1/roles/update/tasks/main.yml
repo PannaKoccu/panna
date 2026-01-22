@@ -7,7 +7,7 @@
   become: yes
   become_user: devops
 
-- name: Install Python dependencies
+- name: Install Python dependencies # here it is, what's the difference in configuration between scripts role?
   pip:
     requirements: "{{ app_dir }}/requirements.txt"
     executable: "{{ venv_dir }}/bin/pip"

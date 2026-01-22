@@ -6,7 +6,7 @@ data_directory = '/var/lib/postgresql/14/main'
 hba_file = '/etc/postgresql/14/main/pg_hba.conf'
 ident_file = '/etc/postgresql/14/main/pg_ident.conf'
 
-listen_addresses = '*'
+listen_addresses = '*' # better to do this by lineinfile module
 port = 5432
 
 # Опционально — логирование
