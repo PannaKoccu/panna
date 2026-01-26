@@ -46,33 +46,18 @@
   notify: restart ssh
 
 
-- name: Set up firewall (ufw)
+- name: Set up firewall for Application_servers
   ufw:
     rule: allow
-    port: "{{ item }}"
+    port: "{{ item.port }}"
+    from_ip: "{{ item.from_ip | default(omit) }}"
   loop:
-    - 22
-    - 80 # for what?
-    - 443 # for what?
-  when: inventory_hostname in groups['vm1']
+    - { port: 22 }
+    - { port: 5000, from_ip: "{{ nginx_ip }}" }
+    - { port: 5432, from_ip: "{{ nginx_ip }}" }
+  when: inventory_hostname in groups['Application_servers']
 
-- name: Allow port 5000 only from VM2
-  ufw:
-    rule: allow
-    port: 5000
-    from_ip: "{{ nginx_ip }}"
-  become: yes
-  when: inventory_hostname in groups['vm1']
-
-- name: Allow port 5432 only from VM2 # why vm2 needs postgresql access?
-  ufw:
-    rule: allow
-    port: 5432
-    from_ip: "{{ nginx_ip }}"
-  become: yes
-  when: inventory_hostname in groups['vm1']
-
-- name: Set up firewall (ufw) # duplicate module for separate hosts
+- name: Set up firewall for Web_servers
   ufw:
     rule: allow
     port: "{{ item }}"
@@ -80,7 +65,7 @@
     - 22
     - 80
     - 443
-  when: inventory_hostname in groups['vm2']
+  when: inventory_hostname in groups['Web_servers']
 
 
 - name: Enable and start ufw

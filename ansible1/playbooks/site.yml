@@ -5,26 +5,26 @@
   roles:
     - common
 
-- name: Deploy PostgreSQL on VM1
-  hosts: vm1
+- name: Deploy PostgreSQL on Application_servers
+  hosts: Application_servers
   become: yes
   roles:
     - database
 
-- name: Deploy application on VM1
-  hosts: vm1
+- name: Deploy application on Application_servers
+  hosts: Application_servers
   become: yes
   roles:
     - application
 
-- name: webserver conf
-  hosts: vm2
+- name: Web-server conf
+  hosts: Web_servers
   become: yes
   roles:
     - webserver
 
-- name: Deploy scripts on VM1
-  hosts: vm1
+- name: Deploy scripts on Application_servers
+  hosts: Application_servers
   become: yes
   roles:
     - scripts

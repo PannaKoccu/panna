@@ -1,13 +1,12 @@
-- name: Copy healthcheck.sh script
+- name: Copy healthcheck.sh script on Web_servers
   template:
     src: healthcheck.sh.j2
-    dest: "/home/devops/healthcheck.sh"
+    dest: "{{ home_dir }}/healthcheck.sh"
     owner: devops
     group: devops
     mode: '0755'
-  when: "'vm2' in group_names"
+  when: "'Web_servers' in group_names"
   become: yes
-  become_user: devops
 
 - name: Ensure cron is installed
   apt:
@@ -19,15 +18,15 @@
   cron:
     name: "Healthcheck script"
     minute: "*/10"
-    job: "/home/devops/healthcheck.sh >/dev/null 2>&1"
+    job: "{{ home_dir }}/healthcheck.sh >/dev/null 2>&1"
     user: devops
-  when: "'vm2' in group_names"
+  when: "'Web_servers' in group_names"
   become: yes
 
 - name: Deploy logrotate config for application
   copy:
     content: |
-      /var/log/task1/*.log {
+      {{ logrotate_app_log_path }} {
           daily
           missingok
           rotate 14
@@ -39,17 +38,17 @@
               systemctl kill --signal=SIGUSR1 task1 > /dev/null 2>&1 || true
           endscript
       }
-    dest: /etc/logrotate.d/task1
+    dest: "{{  logrotate_app_config_dest }}"
     owner: root
     group: root
     mode: '0644'
-  when: "'vm1' in group_names"
+  when: "'Application_servers' in group_names"
   become: yes
 
 - name: Deploy logrotate config for scripts
   copy:
     content: |
-      /var/logs/*.log {
+      {{ logrotate_scripts_log_path }} {
           weekly
           missingok
           rotate 14
@@ -58,27 +57,35 @@
           notifempty
           create 644 devops devops
       }
-    dest: /etc/logrotate.d/task1-scripts
+    dest: "{{ logrotate_scripts_config_dest }}"
     owner: root
     group: root
     mode: '0644'
   become: yes
 
-- name: Create .pgpass for database healthcheck
-  template:
-    src: pgpass.j2
-    dest: /home/devops/.pgpass
-    owner: devops
-    group: devops
-    mode: '0600'
+- name: Deploy logrotate config for DB
+  copy:
+    content: |
+      {{ logrotate_db_log_path }} {
+          daily
+          rotate 7
+          compress
+          delaycompress
+          missingok
+          notifempty
+      }
+    dest: "{{ logrotate_db_config_dest }}"
+    owner: root
+    group: root
+    mode: '0644'
   become: yes
 
-- name: Copy test-deployment script to VM1
+- name: Copy test-deployment script to Application_servers
   template:
     src: test-deployment.sh.j2
-    dest: /home/devops/test-deployment.sh
+    dest: "{{ home_dir }}/test-deployment.sh"
     owner: devops
     group: devops
     mode: '0755'
-  when: "'vm1' in group_names"
+  when: "'Application_servers' in group_names"
   become: yes

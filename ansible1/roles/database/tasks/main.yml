@@ -1,42 +1,90 @@
----
 - name: Install PostgreSQL and dependencies
   apt:
-    name:
-      - postgresql
-      - postgresql-contrib
-      - python3-psycopg2
+    name: [postgresql, postgresql-contrib, python3-psycopg2]
     state: present
-  notify: Restart PostgreSQL
 
-- name: Ensure PostgreSQL is started and enabled
-  systemd:
-    name: postgresql
-    state: started
-    enabled: yes
+- name: Create PostgreSQL log directory
+  file:
+    path: "{{ postgresql_log_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: '0750'
+  become: yes
 
 - name: Ensure PostgreSQL cluster exists
   command: pg_createcluster 14 main --start
   args:
-    creates: /etc/postgresql/14/main/postgresql.conf
+    creates: "{{ db_config }}"
+  register: cluster_created
   become: yes
 
 - name: Copy pg_hba.conf template
   template:
     src: pg_hba.conf.j2
-    dest: /etc/postgresql/14/main/pg_hba.conf
+    dest: "{{ db_pg_hba }}"
     owner: root
     group: root
     mode: '0644'
-  notify: Restart PostgreSQL
+  register: hba_changed
 
-- name: Copy PostgreSQL configuration template
-  template:
-    src: postgresql.conf.j2
-    dest: /etc/postgresql/14/main/postgresql.conf
-    owner: root
-    group: root
-    mode: '0644'
-  notify: Restart PostgreSQL
+- name: Configure listen_addresses in postgresql.conf
+  lineinfile:
+    path: "{{ db_config }}"
+    regexp: '^#?listen_addresses\s*='
+    line: "listen_addresses = '*'"
+  register: listen_changed
+
+- name: Configure port in postgresql.conf
+  lineinfile:
+    path: "{{ db_config }}"
+    regexp: '^#?port\s*='
+    line: "port = 5432"
+  register: port_changed
+
+- name: Enable logging collector
+  lineinfile:
+    path: "{{ db_config }}"
+    regexp: '^#?logging_collector\s*='
+    line: "logging_collector = on"
+  register: log_collector_changed
+
+- name: Set log directory
+  lineinfile:
+    path: "{{ db_config }}"
+    regexp: '^#?log_directory\s*='
+    line: "log_directory = '{{ postgresql_log_dir }}'"
+  register: log_dir_changed
+
+- name: Set log filename pattern
+  lineinfile:
+    path: "{{ db_config }}"
+    regexp: '^#?log_filename\s*='
+    line: "log_filename = 'postgresql-%Y-%m-%d.log'"
+  register: log_file_changed
+
+- name: Configure what to log
+  lineinfile:
+    path: "{{ db_config }}"
+    regexp: '^#?log_statement\s*='
+    line: "log_statement = 'mod'"
+  register: log_statement_changed
+
+- name: Restart PostgreSQL if any configuration changed
+  systemd:
+    name: postgresql
+    state: restarted
+    enabled: yes
+  become: yes
+  when: >
+    cluster_created.changed or
+    hba_changed.changed or
+    listen_changed.changed or
+    port_changed.changed or
+    log_collector_changed.changed or
+    log_dir_changed.changed or
+    log_file_changed.changed or
+    log_statement_changed.changed
 
 - name: Create database user
   postgresql_user:

@@ -4,15 +4,9 @@
     state: present
   become: yes
 
-- name: Install Python cryptography for SSL module # why is it needed?
-  pip:
-    name: cryptography
-    state: present
-  become: yes
-
 - name: Create SSL directory
   file:
-    path: /etc/nginx/ssl
+    path: "{{ ssl_dir }}"
     state: directory
     owner: root
     group: root
@@ -21,15 +15,15 @@
 
 - name: Generate private key
   openssl_privatekey:
-    path: /etc/nginx/ssl/nginx-selfsigned.key
+    path: "{{ selfsigned_key }}"
     size: 2048
     mode: '0600'
   become: yes
 
 - name: Generate CSR
   openssl_csr:
-    path: /etc/nginx/ssl/nginx-selfsigned.csr
-    privatekey_path: /etc/nginx/ssl/nginx-selfsigned.key
+    path: "{{ selfsigned_csr }}"
+    privatekey_path: "{{ selfsigned_key }}"
     common_name: "{{ domain_name }}"
     subject_alt_name:
       - "DNS:{{ domain_name }}"
@@ -42,9 +36,9 @@
 
 - name: Generate self-signed certificate
   openssl_certificate:
-    path: /etc/nginx/ssl/nginx-selfsigned.crt
-    privatekey_path: /etc/nginx/ssl/nginx-selfsigned.key
-    csr_path: /etc/nginx/ssl/nginx-selfsigned.csr
+    path: "{{ selfsigned_crt }}"
+    privatekey_path: "{{ selfsigned_key }}"
+    csr_path: "{{ selfsigned_csr }}"
     provider: selfsigned
     selfsigned_not_after: "+365d"
     mode: '0644'
@@ -53,31 +47,31 @@
 - name: Copy Nginx virtual host configuration
   template:
     src: app.devops.local.conf.j2
-    dest: /etc/nginx/sites-available/app.devops.local
+    dest: "{{ nginx_conf_way }}"
     owner: root
     group: root
     mode: '0644'
   become: yes
-  notify: restartNginx
+  notify: restart Nginx
 
 - name: Enable Nginx virtual host
   file:
-    src: /etc/nginx/sites-available/app.devops.local
-    dest: /etc/nginx/sites-enabled/app.devops.local
+    src: "{{ nginx_conf_way }}"
+    dest: "{{ nginx_vh_way }}"
     state: link
   become: yes
-  notify: restartNginx
+  notify: restart Nginx
 
 - name: Remove default site
   file:
-    path: /etc/nginx/sites-enabled/default
+    path: "{{ nginx_default_site }}"
     state: absent
   become: yes
-  notify: restartNginx
+  notify: restart Nginx
 
 - name: Create Nginx log directories
   file:
-    path: /var/log/nginx/
+    path: "{{ nginx_log_dir }}"
     state: directory
     owner: root
     group: root

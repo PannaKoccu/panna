@@ -1,13 +1,12 @@
 #!/bin/bash
 # setup.sh - Установка зависимостей Python-приложения
-# Расположение: {{ app_dir }}/setup.sh
 
 set -e  # Прерывать выполнение при первой ошибке
 
 # Переменные
 APP_DIR="{{ app_dir }}"
 VENV_DIR="{{ venv_dir }}"
-LOG_FILE="/var/log/task1/setup.log"
+LOG_FILE="{{ script_setup_log }}"
 
 # Создаём директорию для логов
 mkdir -p "$(dirname "$LOG_FILE")"

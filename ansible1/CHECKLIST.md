@@ -9,8 +9,8 @@
 - Проверка редиректа HTTP → HTTPS: `curl -I http://<nginx_ip>`.
 - Проверка HTTPS: `curl -k -I https://<nginx_ip>`.
 - Логи: 
-  - `sudo tail -n 20 /var/log/nginx/app.devops.local.access.log`.
-  - `sudo tail -n 20 /var/log/nginx/app.devops.local.error.log`.
+  - `sudo tail -n 20 /var/log/task1/nginx/app.devops.local.access.log`.
+  - `sudo tail -n 20 /var/log/task1/nginx/app.devops.local.error.log`.
 
 ## Проверка бэкенда (на VM1)
 
@@ -26,10 +26,10 @@
 ## Проверка логов и cron** 
 
 - Nginx:
-  - `sudo cat /var/log/nginx/app.devops.local.access.log`.
-  - `sudo cat /var/log/nginx/app.devops.local.error.log`.
+  - `sudo cat /var/log/task1/nginx/app.devops.local.access.log`.
+  - `sudo cat /var/log/task1/nginx/app.devops.local.error.log`.
 - Приложение: `sudo cat /var/log/task1/app.log`.
-- Backup: `sudo cat /var/log/task1/backup.log`.
-- scripts: `sudo cat /var/log/task1/*.log`.
+- Backup: `sudo cat /var/log/task1/scripts/backup.log`.
+- scripts: `sudo cat /var/log/task1/scripts/*.log`.
 - БД:  `sudo cat /var/log/postgresql/postgresql-14-main.log`.
 - Проверка cron-задач: `sudo crontab -u devops -l`.

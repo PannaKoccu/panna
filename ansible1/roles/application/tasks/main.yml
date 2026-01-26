@@ -1,6 +1,6 @@
 - name: Create application directory
   file:
-    path: /home/devops/task1/flask-auth-example
+    path: "{{ app_dir }}"
     state: directory
     owner: devops
     group: devops
@@ -13,8 +13,6 @@
     dest: "{{ app_dir }}"
     version: main
     force: yes
-  become: yes # this is not necessary there
-  become_user: devops # you are already executing as devops
 
 - name: Create virtual environment directory
   file:
@@ -29,7 +27,6 @@
   args:
     creates: "{{ venv_dir }}/bin/python"
   become: yes
-  become_user: devops
 
 - name: Download get-pip.py
   get_url:
@@ -43,7 +40,6 @@
   args:
     creates: "{{ venv_dir }}/bin/pip"
   become: yes
-  become_user: devops
 
 - name: Create .env file
   template:
@@ -53,19 +49,17 @@
     group: devops
     mode: '0600'
   become: yes
-  become_user: devops
 
 - name: Install Python dependencies
-  pip:
+  ansible.builtin.pip:
     requirements: "{{ app_dir }}/requirements.txt"
     executable: "{{ venv_dir }}/bin/pip"
     state: present
   become: yes
-  become_user: devops
 
 - name: Create application log directory
   file:
-    path: /var/log/task1 # static value, not optimal
+    path:  "{{ log_dir }}"
     state: directory
     owner: devops
     group: devops
@@ -74,13 +68,13 @@
 
 - name: Check if application log file exists
   stat:
-    path: /var/log/task1/app.log
+    path: "{{ app_log_file }}"
   register: app_log_stat
   become: yes
 
 - name: Create empty application log file if absent
   file:
-    path: /var/log/task1/app.log
+    path: "{{ app_log_file }}"
     state: touch
     owner: devops
     group: devops
@@ -91,7 +85,7 @@
 - name: Copy systemd service file
   template:
     src: task1.service.j2
-    dest: /etc/systemd/system/task1.service
+    dest: "{{ systemd_service }}"
     owner: root
     group: root
     mode: '0644'

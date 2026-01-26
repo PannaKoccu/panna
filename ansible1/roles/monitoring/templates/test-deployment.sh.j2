@@ -7,21 +7,42 @@ set -e
 APP_URL="http://localhost:{{ app_port }}"
 DB_NAME="{{ db_name }}"
 DB_USER="{{ db_user }}"
-BACKUP_DIR="/var/log/task1/backups"
+BACKUP_DIR="{{ backup_dir }}"
+NGINX_URL="https://{{ nginx_ip }}"
 
 log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
 }
 
-# === 1. Проверка локального бэкенда ===
-log "Проверка локального бэкенда"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$APP_URL")
-if [[ "$HTTP_CODE" =~ ^[23][0-9][0-9]$ ]]; then
-    log "Бэкенд доступен (HTTP $HTTP_CODE)"
-else
-    log "Бэкенд недоступен (HTTP $HTTP_CODE)"
-    exit 1
-fi
+http_code() {
+    curl -k -s -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 15 "$1"
+}
+
+
+
+check_nginx() {
+    if code=$(http_code "$NGINX_URL"); then
+        [[ "$code" =~ ^[23][0-9][0-9]$ ]] && log "Nginx доступен (HTTP $code)" || { log "Nginx вернул ошибку (HTTP $code)"; exit 1; }
+    else
+        log "Nginx недоступен (ошибка соединения)"
+        exit 1
+    fi
+}
+
+
+check_backend() {
+    if code=$(http_code "$APP_URL"); then
+        log "Бэкенд доступен (HTTP $code)"
+    else
+        log "Бэкенд недоступен (ошибка соединения)"
+        exit 1
+    fi
+}
+
+check_nginx
+check_backend
+
+
 
 # === 2. Проверка подключения к локальной БД ===
 log "Проверка подключения к БД"
@@ -45,8 +66,8 @@ COUNT_BEFORE=$(psql -d "$DB_NAME" -U "$DB_USER" -t -c "SELECT COUNT(*) FROM "use
 log "Количество записей до бэкапа: $COUNT_BEFORE"
 
 # Запускаем локальный backup
-log "Запускаем /home/devops/task1/flask-auth-example/backup.sh"
-sudo -u devops {{ app_dir }}/backup.sh
+log "Запускаем {{ backup_dir }}/backup.sh"
+sudo -u devops {{ backup_dir }}/backup.sh
 
 # Находим последний бэкап
 LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/*.sql.gz 2>/dev/null | head -1)

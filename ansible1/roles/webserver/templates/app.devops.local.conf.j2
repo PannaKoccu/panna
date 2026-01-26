@@ -2,19 +2,18 @@
 server {
     listen 80;
     listen [::]:80;
-    server_name app.devops.local {{ nginx_ip }} localhost; # could be _;
+    server_name _;
 
-    return 301 https://$server_name$request_uri;
+    return 301 https://$host$request_uri;
 }
 
 # ====== HTTPS — основной сервер ======
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name app.devops.local {{ nginx_ip }} localhost; # better to leave as app.devops.local only
-
-    ssl_certificate /etc/nginx/ssl/nginx-selfsigned.crt;
-    ssl_certificate_key /etc/nginx/ssl/nginx-selfsigned.key;
+    server_name app.devops.local;
+    ssl_certificate {{ selfsigned_crt }};
+    ssl_certificate_key {{ selfsigned_key }};
 
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
@@ -45,15 +44,16 @@ server {
     }
 
     location / {
-        proxy_pass http://{{ app_server_ip }}:{{ app_port }};
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
+    proxy_pass http://{{ app_server_ip }}:{{ app_port }};
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $server_name;
+    proxy_redirect off;
+}
 
-    access_log /var/log/nginx/{{ domain_name }}.access.log;
-    error_log /var/log/nginx/{{ domain_name }}.error.log;
+    access_log {{ nginx_log_dir }}/{{ domain_name }}.access.log;
+    error_log {{ nginx_log_dir }}/{{ domain_name }}.error.log;
 }

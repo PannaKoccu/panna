@@ -1,16 +1,14 @@
-- name: Clone application repository
+- name: Clone application repository for update
   git:
     repo: https://github.com/PannaKoccu/task1.git
     dest: "{{ app_dir }}"
     version: main
     force: yes
   become: yes
-  become_user: devops
 
-- name: Install Python dependencies # here it is, what's the difference in configuration between scripts role?
-  pip:
+- name: Update Python dependencies # here it is, what's the difference in configuration between scripts role? (Не совсем понял вопрос, тут установка зависимостей, если они поменялись, это как часть обновления. Скрипт просто копируется в своей роли)
+  ansible.builtin.pip:
     requirements: "{{ app_dir }}/requirements.txt"
     executable: "{{ venv_dir }}/bin/pip"
     state: present
   become: yes
-  become_user: devops

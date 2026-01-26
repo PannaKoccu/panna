@@ -3,8 +3,3 @@
   systemd:
     name: ssh
     state: restarted
-
-- name: Wait for SSH to be ready # where is it used?
-  wait_for_connection:
-    delay: 5
-    timeout: 30

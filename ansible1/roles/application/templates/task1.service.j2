@@ -9,8 +9,8 @@ Environment="PATH={{ venv_dir }}/bin"
 ExecStart={{ venv_dir }}/bin/python {{ app_dir }}/main.py
 Restart=on-failure
 RestartSec=5s
-StandardOutput=append:/var/log/task1/app.log
-StandardError=append:/var/log/task1/app.log
+StandardOutput=append:{{ app_log_file }}
+StandardError=append:{{ app_log_file }}
 
 [Install]
 WantedBy=multi-user.target

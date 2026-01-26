@@ -1,6 +1,6 @@
 ---
-- name: Apply common role to all servers
-  hosts: vm1
+- name: Update application and requirements
+  hosts: Application_servers
   become: yes
   roles:
     - update
