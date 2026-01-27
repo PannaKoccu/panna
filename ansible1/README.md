@@ -148,7 +148,7 @@
 
 #### Handlers
 
-- restart ssh — перезапуск SSH после изменения конфига.
+- Restart SSH — перезапуск SSH после изменения конфига.
 
 ### database
 
@@ -253,7 +253,7 @@
 
 #### Handlers
 
-- restart Nginx
+- Restart Nginx
 
 #### Templates
 
