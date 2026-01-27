@@ -52,7 +52,7 @@
     group: root
     mode: '0644'
   become: yes
-  notify: restart Nginx
+  notify: Restart Nginx
 
 - name: Enable Nginx virtual host
   file:
@@ -60,14 +60,14 @@
     dest: "{{ nginx_vh_way }}"
     state: link
   become: yes
-  notify: restart Nginx
+  notify: Restart Nginx
 
 - name: Remove default site
   file:
     path: "{{ nginx_default_site }}"
     state: absent
   become: yes
-  notify: restart Nginx
+  notify: Restart Nginx
 
 - name: Create Nginx log directories
   file:
