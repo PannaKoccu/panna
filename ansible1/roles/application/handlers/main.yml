@@ -3,4 +3,4 @@
     name: task1
     state: restarted
     daemon_reload: yes
-  become: yes
+  become: true

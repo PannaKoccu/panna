@@ -5,14 +5,14 @@
     owner: devops
     group: devops
     mode: '0755'
-  become: yes
+  become: true
   
 - name: Clone application repository
   git:
     repo: https://github.com/PannaKoccu/task1.git
     dest: "{{ app_dir }}"
     version: main
-    force: yes
+    force: true
 
 - name: Create virtual environment directory
   file:
@@ -26,20 +26,20 @@
   command: python3 -m venv --without-pip "{{ venv_dir }}"
   args:
     creates: "{{ venv_dir }}/bin/python"
-  become: yes
+  become: true
 
 - name: Download get-pip.py
   get_url:
     url: https://bootstrap.pypa.io/get-pip.py
     dest: /tmp/get-pip.py
     mode: '0644'
-  become: yes
+  become: true
 
 - name: Install pip into virtual environment
   command: "{{ venv_dir }}/bin/python /tmp/get-pip.py"
   args:
     creates: "{{ venv_dir }}/bin/pip"
-  become: yes
+  become: true
 
 - name: Create .env file
   template:
@@ -48,14 +48,14 @@
     owner: devops
     group: devops
     mode: '0600'
-  become: yes
+  become: true
 
 - name: Install Python dependencies
   ansible.builtin.pip:
     requirements: "{{ app_dir }}/requirements.txt"
     executable: "{{ venv_dir }}/bin/pip"
     state: present
-  become: yes
+  become: true
 
 - name: Create application log directory
   file:
@@ -64,13 +64,13 @@
     owner: devops
     group: devops
     mode: '0755'
-  become: yes
+  become: true
 
 - name: Check if application log file exists
   stat:
     path: "{{ app_log_file }}"
   register: app_log_stat
-  become: yes
+  become: true
 
 - name: Create empty application log file if absent
   file:
@@ -80,7 +80,7 @@
     group: devops
     mode: '0644'
   when: not app_log_stat.stat.exists
-  become: yes
+  become: true
 
 - name: Copy systemd service file
   template:
@@ -95,5 +95,5 @@
   systemd:
     name: task1
     state: started
-    enabled: yes
-  become: yes
+    enabled: true
+  become: true

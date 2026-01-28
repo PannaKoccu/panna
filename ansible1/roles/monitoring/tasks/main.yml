@@ -6,13 +6,13 @@
     group: devops
     mode: '0755'
   when: "'Web_servers' in group_names"
-  become: yes
+  become: true
 
 - name: Ensure cron is installed
   apt:
     name: cron
     state: present
-  become: yes
+  become: true
 
 - name: Install healthcheck cron job
   cron:
@@ -21,7 +21,7 @@
     job: "{{ home_dir }}/healthcheck.sh >/dev/null 2>&1"
     user: devops
   when: "'Web_servers' in group_names"
-  become: yes
+  become: true
 
 - name: Deploy logrotate config for application
   copy:
@@ -43,7 +43,7 @@
     group: root
     mode: '0644'
   when: "'Application_servers' in group_names"
-  become: yes
+  become: true
 
 - name: Deploy logrotate config for scripts
   copy:
@@ -61,7 +61,7 @@
     owner: root
     group: root
     mode: '0644'
-  become: yes
+  become: true
 
 - name: Deploy logrotate config for DB
   copy:
@@ -78,7 +78,8 @@
     owner: root
     group: root
     mode: '0644'
-  become: yes
+  when: "'Application_servers' in group_names"
+  become: true
 
 - name: Copy test-deployment script to Application_servers
   template:
@@ -88,4 +89,4 @@
     group: devops
     mode: '0755'
   when: "'Application_servers' in group_names"
-  become: yes
+  become: true

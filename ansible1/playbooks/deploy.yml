@@ -1,6 +1,6 @@
 ---
 - name: Update application and requirements
   hosts: Application_servers
-  become: yes
+  become: true
   roles:
     - update

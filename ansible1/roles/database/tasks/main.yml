@@ -10,14 +10,14 @@
     owner: postgres
     group: postgres
     mode: '0750'
-  become: yes
+  become: true
 
 - name: Ensure PostgreSQL cluster exists
   command: pg_createcluster 14 main --start
   args:
     creates: "{{ db_config }}"
   register: cluster_created
-  become: yes
+  become: true
 
 - name: Copy pg_hba.conf template
   template:
@@ -74,8 +74,8 @@
   systemd:
     name: postgresql
     state: restarted
-    enabled: yes
-  become: yes
+    enabled: true
+  become: true
   when: >
     cluster_created.changed or
     hba_changed.changed or
@@ -92,7 +92,7 @@
     password: "{{ db_password }}"
     role_attr_flags: LOGIN
     login_user: postgres
-  become: yes
+  become: true
   become_user: postgres
 
 - name: Create database
@@ -100,5 +100,5 @@
     name: "{{ db_name }}"
     owner: "{{ db_user }}"
     login_user: postgres
-  become: yes
+  become: true
   become_user: postgres

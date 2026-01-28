@@ -5,8 +5,8 @@
 set -e
 
 LOG_FILE="{{ healthcheck_log }}"
-NGINX_URL="https://{{ nginx_ip }}"
-BACKEND_URL="http://{{ app_server_ip }}:{{ app_port }}"
+NGINX_URL="https://{{ hostvars['web']['ansible_host'] }}"
+BACKEND_URL="http://{{ hostvars['app']['ansible_host'] }}:{{ app_port }}"
 
 
 mkdir -p "$(dirname "$LOG_FILE")"
@@ -40,7 +40,7 @@ check_backend() {
 check_database() {
     log "Проверка подключения к базе данных"
     if sudo -u devops psql \
-        "host={{ app_server_ip }} port=5432 dbname={{ db_name }} user={{ db_user }}" \
+        "host={{ hostvars['app']['ansible_host'] }} port=5432 dbname={{ db_name }} user={{ db_user }}" \
         -c "SELECT 1;" > /dev/null 2>&1; then
         log "База данных доступна"
     else

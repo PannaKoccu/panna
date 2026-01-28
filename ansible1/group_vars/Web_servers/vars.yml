@@ -1,0 +1,12 @@
+#Nginx
+selfsigned_crt: "{{ ssl_dir }}/nginx-selfsigned.crt"
+selfsigned_key: "{{ ssl_dir }}/nginx-selfsigned.key"
+selfsigned_csr: "{{ ssl_dir }}/nginx-selfsigned.csr"
+nginx_conf_way: /etc/nginx/sites-available/app.devops.local
+nginx_vh_way: /etc/nginx/sites-enabled/app.devops.local
+nginx_default_site: /etc/nginx/sites-enabled/default
+ssl_dir: /etc/nginx/ssl/
+nginx_log_dir: "{{ log_dir }}/nginx/"
+domain_name: "app.devops.local"
+#healthcheck
+healthcheck_log: "{{ script_log_dir }}/healthcheck.log"

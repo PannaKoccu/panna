@@ -6,7 +6,7 @@
     owner: devops
     group: devops
     mode: '0755'
-  become: yes
+  become: true
 
 - name: Copy setup.sh script # there is ansible.builtin.pip module for requirements.txt setup (я просто копирую скрипт, который нужен по заданию, установка зависимостей в роли application)
   template:
@@ -15,7 +15,7 @@
     owner: devops
     group: devops
     mode: '0755'
-  become: yes
+  become: true
 
 - name: Create backups directory
   file:
@@ -32,7 +32,7 @@
     owner: devops
     group: devops
     mode: '0755'
-  become: yes
+  become: true
 
 - name: Install backup cron job
   cron:
@@ -41,4 +41,4 @@
     hour: "2"
     job: "{{ app_dir }}/backup.sh >> {{ cron_backup }} 2>&1"
     user: devops
-  become: yes
+  become: true

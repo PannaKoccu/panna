@@ -2,7 +2,7 @@
   apt:
     name: nginx
     state: present
-  become: yes
+  become: true
 
 - name: Create SSL directory
   file:
@@ -11,14 +11,14 @@
     owner: root
     group: root
     mode: '0755'
-  become: yes
+  become: true
 
 - name: Generate private key
   openssl_privatekey:
     path: "{{ selfsigned_key }}"
     size: 2048
     mode: '0600'
-  become: yes
+  become: true
 
 - name: Generate CSR
   openssl_csr:
@@ -32,7 +32,7 @@
     locality_name: "Minsk"
     organization_name: "DevOps Team"
     mode: '0644'
-  become: yes
+  become: true
 
 - name: Generate self-signed certificate
   openssl_certificate:
@@ -42,7 +42,7 @@
     provider: selfsigned
     selfsigned_not_after: "+365d"
     mode: '0644'
-  become: yes
+  become: true
 
 - name: Copy Nginx virtual host configuration
   template:
@@ -51,7 +51,7 @@
     owner: root
     group: root
     mode: '0644'
-  become: yes
+  become: true
   notify: Restart Nginx
 
 - name: Enable Nginx virtual host
@@ -59,14 +59,14 @@
     src: "{{ nginx_conf_way }}"
     dest: "{{ nginx_vh_way }}"
     state: link
-  become: yes
+  become: true
   notify: Restart Nginx
 
 - name: Remove default site
   file:
     path: "{{ nginx_default_site }}"
     state: absent
-  become: yes
+  become: true
   notify: Restart Nginx
 
 - name: Create Nginx log directories
@@ -76,4 +76,4 @@
     owner: root
     group: root
     mode: '0755'
-  become: yes
+  become: true

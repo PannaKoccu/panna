@@ -1,7 +1,7 @@
 ---
 - name: Update apt cache
   apt:
-    update_cache: yes
+    update_cache: true
     cache_valid_time: 3600
 
 - name: Install basic packages
@@ -26,7 +26,7 @@
     path: /etc/ssh/sshd_config
     regexp: '^#?PasswordAuthentication'
     line: 'PasswordAuthentication no'
-    backup: yes
+    backup: true
   notify: Restart SSH
 
 - name: Disable root login in SSH
@@ -34,7 +34,7 @@
     path: /etc/ssh/sshd_config
     regexp: '^#?PermitRootLogin'
     line: 'PermitRootLogin no'
-    backup: yes
+    backup: true
   notify: Restart SSH
 
 - name: Ensure PubkeyAuthentication is enabled
@@ -42,7 +42,7 @@
     path: /etc/ssh/sshd_config
     regexp: '^#?PubkeyAuthentication'
     line: 'PubkeyAuthentication yes'
-    backup: yes
+    backup: true
   notify: Restart SSH
 
 
@@ -53,8 +53,8 @@
     from_ip: "{{ item.from_ip | default(omit) }}"
   loop:
     - { port: 22 }
-    - { port: 5000, from_ip: "{{ nginx_ip }}" }
-    - { port: 5432, from_ip: "{{ nginx_ip }}" }
+    - { port: 5000, from_ip: "{{ hostvars['web']['ansible_host'] }}" }
+    - { port: 5432, from_ip: "{{ hostvars['web']['ansible_host'] }}" }
   when: inventory_hostname in groups['Application_servers']
 
 - name: Set up firewall for Web_servers

@@ -1,0 +1,17 @@
+systemd_service: /etc/systemd/system/task1.service
+venv_dir: "{{ app_dir }}/venv"
+#Database
+db_default_way: /etc/postgresql/14/main
+db_config: "{{ db_default_way }}/postgresql.conf"
+db_pg_hba: "{{ db_default_way }}/pg_hba.conf"
+#logrotate
+logrotate_app_log_path: "/var/log/task1/*.log"
+logrotate_app_config_dest: "/etc/logrotate.d/task1"
+logrotate_db_log_path: "/var/log/postgresql/*.log"
+logrotate_db_config_dest: "/etc/logrotate.d/database"
+#logs, backup and cron
+script_setup_log: "{{ script_log_dir }}/setup.log"
+postgresql_log_dir: /var/log/postgresql
+script_backup_log: "{{ script_log_dir }}backup.log"
+backup_dir: /var/backups/
+cron_backup: "{{backup_dir }}/cron_backup.log"

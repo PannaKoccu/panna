@@ -1,46 +1,17 @@
 ---
-# IP, names and systemd_service
+# names and port
 app_name: task1
 app_user: devops
-nginx_ip: "192.168.1.142"
-app_server_ip: "192.168.1.140"
 app_port: 5000
-domain_name: "app.devops.local"
-systemd_service: /etc/systemd/system/task1.service
 # directory
 app_dir: "/home/{{ app_user }}/{{ app_name }}"
-venv_dir: "{{ app_dir }}/venv"
 home_dir: "/home/{{ app_user }}"
-ssl_dir: /etc/nginx/ssl/
-# log and backup directory
 log_dir: "/var/log/{{ app_name }}"
-nginx_log_dir: "{{ log_dir }}/nginx/"
 script_log_dir: "{{ log_dir }}/scripts/"
-backup_dir: /var/backups/
-postgresql_log_dir: /var/log/postgresql
-# Nginx
-selfsigned_crt: "{{ ssl_dir }}/nginx-selfsigned.crt"
-selfsigned_key: "{{ ssl_dir }}/nginx-selfsigned.key"
-selfsigned_csr: "{{ ssl_dir }}/nginx-selfsigned.csr"
-nginx_conf_way: /etc/nginx/sites-available/app.devops.local
-nginx_vh_way: /etc/nginx/sites-enabled/app.devops.local
-nginx_default_site: /etc/nginx/sites-enabled/default
-# log files
-healthcheck_log: "{{ script_log_dir }}/healthcheck.log"
-script_setup_log: "{{ script_log_dir }}/setup.log"
-script_backup_log: "{{ script_log_dir }}backup.log"
 app_log_file: "{{ log_dir }}/app.log"
-cron_backup: "{{backup_dir }}/cron_backup.log"
 # Database
 db_name: "task1"
 db_user: "devops"
-db_default_way: /etc/postgresql/14/main
-db_config: "{{ db_default_way }}/postgresql.conf"
-db_pg_hba: "{{ db_default_way }}/pg_hba.conf"
-# Logrotate
-logrotate_app_log_path: "/var/log/task1/*.log"
+# Logrotate all
 logrotate_scripts_log_path: "/var/logs/*.log"
-logrotate_db_log_path: "/var/log/postgresql/*.log"
-logrotate_app_config_dest: "/etc/logrotate.d/task1"
 logrotate_scripts_config_dest: "/etc/logrotate.d/task1-scripts"
-logrotate_db_config_dest: "/etc/logrotate.d/database"
